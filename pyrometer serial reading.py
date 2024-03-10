@@ -12,7 +12,7 @@ def decode_ieee754(data):
     return struct.unpack("f", data)[0]
 
 
-while 1:
+while True:
 
     try:
         # Configure the serial port
@@ -31,15 +31,17 @@ while 1:
         try:
             # Send command to the device to request data
             command = b"\x82"  # Assuming 0x82 is the command to request data
-            ser.write(command)
+            # ser.write(command)
 
             # Read response from the device
-            response = ser.read(1)  # Assuming the data packet is 4 bytes long
+            response = ser.read(5)  # Assuming the data packet is 4 bytes long
+            if response:
+                print(response)
             # print(len(response))
             # Parse the data packet and decode IEEE 754 floating-point representation
-            if response:
-                data_value = decode_ieee754(response)
-                print("Received data:", data_value)
+            # if response:
+            #     data_value = decode_ieee754(response)
+            #     print("Received data:", data_value)
             else:
                 print("No response received from the device.")
         except serial.SerialException as e:

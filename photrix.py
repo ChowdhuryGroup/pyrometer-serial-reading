@@ -42,17 +42,27 @@ class pyrometer:
         self.connection.port = "COM1"
         atexit.register(self.connection.close)
 
-        self.open_serial_connection()
         # Assume probe might be in continuous mode, reboot to get it into MODBUS mode
         # This is done because MODBUS is more controlled, and the probe waits for commands
+        self.open_serial_connection()
         self.reboot()
+
+        self.baud = self.determine_baud()
+        print(f"Baud successfully determined: {self.baud}")
+
+    def reconnect(self, baudrate=None):
+        if baudrate == None:
+            self.connection.close()
+            self.open_serial_connection()
+        else:
+            self.connection.close()
+            self.connection.baudrate = baudrate
+            self.open_serial_connection()
 
     def reboot(self):
         self.connection.write(bytes([0x02, 0x56, 0x56, 0xED, 0xDE, 0x4B, 0x01, 0x03]))
         self.connection.write(bytes([0x02, 0x56, 0x56, 0x03]))
-        self.connection.close()
         time.sleep(1)
-        self.open_serial_connection()
 
     def open_serial_connection(self):
         # This is equivalent to IOCTL_SERIAL_CLR_RTS, and is essential for probe to respond
@@ -61,11 +71,19 @@ class pyrometer:
 
     def ping(self) -> bool:
         result = modbus.set_register(self.connection, command_register, ping_function)
-        print(result)
+        print(result.hex())
         if result == positive_acknowledge:
+            print("Probe responded to ping!")
             return True
+        else:
+            print("Probe didn't respond to ping...")
+            return False
 
     def determine_baud(self) -> int:
         possible_bauds = [9600, 19200, 38400, 57600, 115200]
         for baud in possible_bauds:
-            print(baud)
+            print(f"Testing for connection with {baud} baud")
+            self.reconnect(baud)
+            if self.ping():
+                return baud
+        print("None of the possible bauds worked, are you sure the connection is good?")

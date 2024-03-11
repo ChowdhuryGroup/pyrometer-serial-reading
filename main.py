@@ -3,7 +3,6 @@ import struct
 import photrix
 
 
-
 # Configure the serial port
 def decode_ieee754(data):
     if len(data) != 4:
@@ -17,4 +16,3 @@ if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 
     pyro = photrix.pyrometer("COM1")
-    pyro.ping()

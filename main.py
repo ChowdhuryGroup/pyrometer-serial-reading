@@ -1,11 +1,7 @@
 # pyrometer serial reading ieee754
-import serial
 import struct
-import atexit
 import photrix
-from pymodbus.client.serial import ModbusSerialClient
-from pymodbus.framer import Framer
-import time
+
 
 
 # Configure the serial port

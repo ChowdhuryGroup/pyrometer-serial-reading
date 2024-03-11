@@ -1,4 +1,12 @@
 import pymodbus
+import serial
+
+
+class pyrometer:
+
+    def __init__(self, port: str):
+        ser = serial.Serial()
+
 
 command_start = b"\x02"
 command_end = b"\x03"

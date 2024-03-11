@@ -28,6 +28,7 @@ if __name__ == "__main__":
         stopbits=serial.STOPBITS_ONE,
         parity=serial.PARITY_NONE,
     )
+
     pyro_serial.port = "COM1"
     atexit.register(pyro_serial.close)
 
@@ -39,18 +40,50 @@ if __name__ == "__main__":
 
     ##### Reproducing writes sent by TemperaSure
     pyro_serial.open()
+    pyro_serial.rts = 0
     pyro_serial.write(bytes([0x02, 0x56, 0x56, 0xED, 0xDE, 0x4B, 0x01, 0x03]))
-    pyro_serial.write(bytes([0x02, 0x56, 0x56, 0x03]))
-    time.sleep(6)
-    pyro_serial.reset_input_buffer()
-    pyro_serial.reset_output_buffer()
-    # Technically this is a MODBUS formatted command, but we immediately go back to non-MODBUS after this, so writing it manually
-    pyro_serial.write(b"\x00\x06\x80\x80\x70\x00\x84\x1B")
     time.sleep(0.1)
-    print("Hopefully this is equal to 0x06: ", pyro_serial.read(9))
+    pyro_serial.write(bytes([0x02, 0x56, 0x56, 0x03]))
+    time.sleep(0.1)
+    ##########################################
+    ### SEEMS like TemperaSure goes through trying incrementing baudrates until it gets a positive response, instead of straight for 115200
+    pyro_serial.close()
+    pyro_serial.baudrate = 9600
+    pyro_serial.open()
+    pyro_serial.rts = 0
+    pyro_serial.write(b"\x00\x06\x80\x00\x70\x00\x84\x1B")
+    time.sleep(0.1)
+    pyro_serial.close()
+    pyro_serial.baudrate = 19200
+    pyro_serial.open()
+    pyro_serial.rts = 0
+    pyro_serial.write(b"\x00\x06\x80\x00\x70\x00\x84\x1B")
+    time.sleep(0.1)
+    pyro_serial.close()
+    pyro_serial.baudrate = 38400
+    pyro_serial.open()
+    pyro_serial.rts = 0
+    pyro_serial.write(b"\x00\x06\x80\x00\x70\x00\x84\x1B")
+    time.sleep(0.1)
+    pyro_serial.close()
+    pyro_serial.baudrate = 57600
+    pyro_serial.open()
+    pyro_serial.rts = 0
+    pyro_serial.write(b"\x00\x06\x80\x00\x70\x00\x84\x1B")
+    time.sleep(0.1)
+    pyro_serial.close()
+    pyro_serial.baudrate = 115200
+    pyro_serial.open()
+    pyro_serial.rts = 0
+    pyro_serial.write(b"\x00\x06\x80\x00\x70\x00\x84\x1B")
+    # pyro_serial.reset_input_buffer()
+    # pyro_serial.reset_output_buffer()
+    # Technically this is a MODBUS formatted command, but we immediately go back to non-MODBUS after this, so writing it manually
+    time.sleep(0.1)
+    print("Hopefully this is equal to 0x06: ", pyro_serial.read(30))
 
     pyro_serial.close()
-    '''
+    """
     pyro_modbus.connect()
     print("Pyrometer connected!")
 
@@ -59,4 +92,4 @@ if __name__ == "__main__":
 
     # temperature = pyrometer.read_holding_registers(address=0x0000, count=2)
     # print(temperature)
-    '''
+    """

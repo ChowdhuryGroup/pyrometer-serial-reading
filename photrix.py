@@ -3,6 +3,24 @@ from pymodbus.framer import Framer
 import serial
 import atexit
 
+
+# Define the CRC-16/MODBUS function
+def modbus_crc(msg: str) -> int:
+    crc = 0xFFFF
+    for n in range(len(msg)):
+        crc ^= msg[n]
+        for i in range(8):
+            if crc & 1:
+                crc >>= 1
+                crc ^= 0xA001
+            else:
+                crc >>= 1
+    return crc.to_bytes(2, byteorder="little")
+
+
+crc = modbus_crc(b"\x00\x06\x80\x00\x70\x00")
+print(b"\x00\x01" + crc)
+input()
 MODBUS, CONTINUOUS = (0, 1)
 
 command_start = b"\x02"
@@ -26,12 +44,6 @@ temperature_header = b"\x81"  # 4 data bytes
 current_header = b"\x82"  # 4 data bytes
 temperature_current_header = b"\x83"  # 8 data bytes
 ambient_temperature_header = b"\x84"  # 8 data bytes
-
-
-class CustomModbusSerialClient(ModbusSerialClient):
-    def connect(self):
-        super().connect()
-        self.socket.rts = 0
 
 
 class pyrometer:

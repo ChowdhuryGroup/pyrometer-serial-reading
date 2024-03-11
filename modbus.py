@@ -21,11 +21,15 @@ def send_modbus_command(
     if (len(function) != 1) or (len(address) != 2) or (len(value) != 2):
         raise ValueError("Number of bytes in arguments is incorrect")
     command_bytes = b"".join([b"\x00", function, address, value])
-    print(f"command bytes: {command_bytes.hex()}")
     command_bytes += modbus_crc(command_bytes)
     connection.write(command_bytes)
 
 
 def set_register(connection: serial.Serial, address: bytes, value: bytes) -> bytes:
     send_modbus_command(connection, b"\x06", address, value)
+    return connection.read(1)
+
+
+def set_coil(connection: serial.Serial, address: bytes, value: bytes) -> bytes:
+    send_modbus_command(connection, b"\x05", address, value)
     return connection.read(1)

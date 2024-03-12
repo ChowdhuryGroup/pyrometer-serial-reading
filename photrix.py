@@ -63,6 +63,7 @@ class pyrometer:
     def reboot(self):
         self.connection.write(bytes([0x02, 0x56, 0x56, 0xED, 0xDE, 0x4B, 0x01, 0x03]))
         self.connection.write(bytes([0x02, 0x56, 0x56, 0x03]))
+        self.connection.reset_input_buffer()
         time.sleep(2)
 
     def open_serial_connection(self):
@@ -223,6 +224,15 @@ class pyrometer:
         if result != b'\x25\x30\x31\x30\x31\x33\x32\x30\x41\x30\x30\x0D':
             print("Final output before streaming is wrong...")
             print(result)
+
+    def get_unescaped_byte(self) -> bytes:
+        return self.connection.read(1)
+    
+    def get_escaped_byte(self) -> bytes:
+        result = self.connection.read(1)
+        if result == b'\x80':
+            return self.connection.read(1)
+        return result
 
     # Manual specifies this, but haven't gotten to work
     def start_sending_combined(self):

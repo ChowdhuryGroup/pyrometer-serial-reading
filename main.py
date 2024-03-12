@@ -17,8 +17,8 @@ if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 
     pyro = photrix.pyrometer("COM1")
-    pyro.enter_continuous_mode()
-    pyro.start_sending_combined()
+    #pyro.enter_continuous_mode()
+    #pyro.start_sending_combined()
     for i in range(5):
         time.sleep(1)
         print(pyro.connection.read_all().hex())

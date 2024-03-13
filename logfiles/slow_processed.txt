@@ -1,0 +1,13 @@
+2024-03-12 23:46:50.670 | R |    9 | 83 42 DA DA E2 28 BA F7 E9 # Current is regular IEEE754 here
+2024-03-12 23:46:55.670 | R |    9 | 83 42 C8 00 00 A9 64 E6 0F # This one should be 
+2024-03-12 23:47:00.676 | R |    9 | 83 42 C8 00 00 A8 90 D2 E2 # This one should be 233877aa, actually gives -1.6078667e-14
+2024-03-12 23:47:05.663 | R |    9 | 83 42 C8 00 00 A9 44 68 D5 # This one should be 233877aa, actually gives -4.361167e-14
+2024-03-12 23:47:10.676 | R |    9 | 83 42 C8 00 00 A9 4C DB 62 # This one should be 233877aa, actually gives -4.5487384e-14
+2024-03-12 23:47:15.664 | R |    9 | 83 43 C3 0A A7 30 67 90 F7 # Current is regular IEEE754 here
+2024-03-12 23:47:20.673 | R |   10 | 83 43 A8 EA 93 2F 80 07 0A # This one too
+2024-03-12 23:47:25.670 | R |    9 | 83 43 66 42 05 2D 05 8E B7 # This one too
+2024-03-12 23:47:30.663 | R |   10 | 83 43 3B 96 84 2B BA F2 F9 # This one too
+2024-03-12 23:47:35.677 | R |    9 | 83 43 1A F6 A3 2A 9C 6B BF # This one too
+2024-03-12 23:47:40.675 | R |    9 | 83 43 01 1F 5B 29 9A 34 8C # This one too
+2024-03-12 23:47:50.678 | R |    9 | 83 42 C8 00 00 A6 B9 33 01 # This one should be 27faeafa, actually gives -1.2850778e-15
+2024-03-12 23:47:55.675 | R |    9 | 83 42 CB C9 89 28 67 53 36 # This one should be 233877aa, actually gives 1.28411194e-14

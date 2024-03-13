@@ -1,0 +1,67 @@
+**********************************************************************
+ENLYZE PortSniffer Tool 2.1 (acc298dbb4a387e03b3404c1812f60e245738d2b)
+Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+**********************************************************************
+
+UTC TIMESTAMP           | T |  LEN | DATA
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 115200
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:42.319 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:42.319 | W |    8 | 02 56 56 ED DE 4B 01 03
+2024-03-12 01:26:42.319 | W |    4 | 02 56 56 03
+2024-03-12 01:26:44.334 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:1, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:1, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:10
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 115200
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:44.351 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:44.351 | W |    8 | 00 06 80 00 70 00 84 1B
+2024-03-12 01:26:44.362 | R |    1 | 84
+2024-03-12 01:26:44.362 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:1, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:1, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:10
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 9600
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:44.366 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:44.366 | W |    8 | 00 06 80 00 70 00 84 1B
+2024-03-12 01:26:44.431 | R |    1 | E1
+2024-03-12 01:26:44.432 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:1, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:1, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:10
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 19200
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:44.445 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:44.445 | W |    8 | 00 06 80 00 70 00 84 1B
+2024-03-12 01:26:44.530 | R |    1 | 0A
+2024-03-12 01:26:44.530 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:1, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:1, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:10
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 38400
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:44.539 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:44.539 | W |    8 | 00 06 80 00 70 00 84 1B
+2024-03-12 01:26:44.629 | R |    1 | 90
+2024-03-12 01:26:44.629 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:1, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:1, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:10
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:4096, OutSize:4096
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:0, ReadTotalTimeoutMultiplier:0, ReadTotalTimeoutConstant:2000, WriteTotalTimeoutMultiplier:0, WriteTotalTimeoutConstant:0
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_BAUD_RATE: 57600
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_CLR_RTS
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_DTR
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_LINE_CONTROL: StopBits:STOP_BIT_1, Parity:NO_PARITY, WordLength:8
+2024-03-12 01:26:44.634 | C |   24 | IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:SERIAL_DTR_CONTROL, FlowReplace:, XonLimit:2048, XoffLimit:512
+2024-03-12 01:26:44.634 | W |    8 | 00 06 80 00 70 00 84 1B
+2024-03-12 01:26:44.728 | R |    1 | 0A
+2024-03-12 01:26:44.728 | W |    4 | 02 56 56 03
+2024-03-12 01:26:44.839 | R |    7 | 01 B8 F4 0A 2D 88 B4

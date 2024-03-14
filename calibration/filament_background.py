@@ -50,7 +50,7 @@ plt.ylabel("Photodiode Current (A)")
 plt.title("Radiative Heating Test 2024-03-09")
 plt.show()
 
-filament_contributions = []
+filament_contributions_radiative = []
 filament_powers = np.array(
     [
         96,
@@ -111,10 +111,10 @@ def get_contribution(start_time: float, end_time: float) -> float:
 
 
 for i in range(len(time_windows)):
-    filament_contributions.append(
+    filament_contributions_radiative.append(
         get_contribution(time_windows[i][0], time_windows[i][1])
     )
-print(filament_contributions)
+print(filament_contributions_radiative)
 
 
 def second_order_poly(x, a, b):
@@ -128,16 +128,108 @@ def r_squared(xdata, ydata, f, *popt):
     return 1 - sum_of_squares_residuals / sum_of_squares_total
 
 
-popt, pcov = curve_fit(second_order_poly, filament_powers, filament_contributions)
-print(popt, pcov)
-
+popt_radiative, _ = curve_fit(
+    second_order_poly, filament_powers, filament_contributions_radiative
+)
+print(f"Radiative Cooldown Fit Params: {popt_radiative}")
 print(
-    f"R squared: {r_squared(filament_powers, filament_contributions, second_order_poly, *popt)}"
+    f"R squared: {r_squared(filament_powers, filament_contributions_radiative, second_order_poly, *popt_radiative)}"
 )
 
-plt.scatter(filament_powers, filament_contributions)
-plt.plot(filament_powers, second_order_poly(filament_powers, *popt))
+plt.scatter(filament_powers, filament_contributions_radiative)
+plt.plot(filament_powers, second_order_poly(filament_powers, *popt_radiative))
 plt.ylabel("Photocurrent (A)")
 plt.xlabel("Filament Power (W)")
 plt.title("Filament Contribution to Photocurrent in Radiative Cooldown")
+plt.show()
+
+
+##########
+# Standalone filament background check, with cold sample (zero background from sample)
+
+cold_filament_data = np.genfromtxt(
+    "calibration/x-2024-03-14 13 48 08 cold filament background.txt", skip_header=3
+)
+
+time = cold_filament_data[:, 0]
+current = cold_filament_data[:, 2]
+
+# Locate time windows
+plt.plot(time, current)
+plt.xlabel("Time (s)")
+plt.ylabel("Photodiode Current (A)")
+plt.title("Cold Sample Filament Background Testing 2024-03-14")
+plt.show()
+
+time_windows = [
+    (75, 90),
+    (122, 130),
+    (152, 175),
+    (202, 235),
+    (252, 282),
+    (300, 340),
+    (356, 391),
+    (400, 475),
+    (543, 594),
+    (554, 602),
+    (621, 666),
+    (688, 733),
+    (750, 788),
+    (806, 859),
+    (860, 935),
+]
+
+filament_background_cold = []
+
+for i in range(len(time_windows)):
+    start_time, end_time = time_windows[i]
+    selected_indices = (time > start_time) & (time < end_time)
+    filament_background_cold.append(np.max(current[selected_indices]))
+
+popt_cold_poly, _ = curve_fit(
+    second_order_poly, filament_powers, filament_background_cold
+)
+
+
+popt_cold_linear, _ = curve_fit(linear, filament_powers, filament_background_cold)
+
+print(f"Cold Sample Poly Fit Params: {popt_cold_poly}")
+print(
+    f"R squared: {r_squared(filament_powers, filament_background_cold, second_order_poly, *popt_cold_poly)}"
+)
+print(f"Cold Sample Linear Fit Params: {popt_cold_linear}")
+print(
+    f"R squared: {r_squared(filament_powers, filament_background_cold, linear, *popt_cold_linear)}"
+)
+
+plt.scatter(
+    filament_powers, filament_contributions_radiative, label="Radiative Cooldown", s=4.0
+)
+plt.scatter(filament_powers, filament_background_cold, label="Cold Sample", s=4.0)
+
+plt.plot(
+    filament_powers,
+    second_order_poly(filament_powers, *popt_radiative),
+    label="Cooldown Fit",
+    linestyle="--",
+    alpha=0.5,
+)
+plt.plot(
+    filament_powers,
+    second_order_poly(filament_powers, *popt_cold_poly),
+    label="Cold 2nd Order Fit",
+    linestyle="--",
+    alpha=0.5,
+)
+plt.plot(
+    filament_powers,
+    linear(filament_powers, *popt_cold_linear),
+    label="Cold Linear Fit",
+    linestyle="--",
+    alpha=0.5,
+)
+plt.ylabel("Photocurrent (A)")
+plt.xlabel("Filament Power (W)")
+plt.title("Filament Background Comparison")
+plt.legend()
 plt.show()

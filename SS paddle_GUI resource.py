@@ -1,6 +1,6 @@
 # fitting and plotting file for SS paddle --GUI file source
 
-import SS_fitting as SS
+import ss_fit as SS
 import main
 
 import matplotlib.pyplot as plt

@@ -2,13 +2,17 @@ import wx
 import os
 import sys
 import importlib.util
-import sys
-import importlib.util
 from io import StringIO
 import contextlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from datetime import datetime
+import photrix
+import main
+import time
+import numpy as np
+import matplotlib.pyplot as plt
+import threading
 import ctypes
 
 # Make window look correct on high DPI display
@@ -32,11 +36,15 @@ class MyFrame(wx.Frame):
         self.select_button = wx.Button(panel, label="Select File")
         self.select_button.Bind(wx.EVT_BUTTON, self.on_select)
         self.stop_button = wx.Button(panel, label="Stop")
+        self.stop_button.Bind(wx.EVT_BUTTON, self.on_stop)
         self.plot_panel = wx.Panel(panel)
         # self.start_button.Bind(wx.EVT_BUTTON, self.on_start)
         self.save_button = wx.Button(panel, label="Save Plot")
         self.save_button.Bind(wx.EVT_BUTTON, self.on_save_plot)
         self.save_button.Disable()  # Disable initially until plot is generated
+        self.save_data_button = wx.Button(panel, label="Save Data")
+        self.save_data_button.Bind(wx.EVT_BUTTON, self.on_save_data)
+        self.save_data_button.Disable()  # Disable initially until plot is generated
 
         # Text control to display file name
         self.file_text = wx.TextCtrl(panel, style=wx.TE_READONLY)
@@ -45,6 +53,7 @@ class MyFrame(wx.Frame):
         button_sizer.Add(self.stop_button, 0, wx.ALL | wx.CENTER, 5)
         button_sizer.Add(self.plot_button, 0, wx.ALL | wx.CENTER, 5)
         button_sizer.Add(self.save_button, 0, wx.ALL | wx.CENTER, 5)
+        button_sizer.Add(self.save_data_button, 0, wx.ALL | wx.CENTER, 5)
 
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
         text_sizer.Add(self.file_text, 1, wx.EXPAND | wx.ALL, 5)
@@ -58,6 +67,15 @@ class MyFrame(wx.Frame):
         main_sizer.Add(self.plot_panel, 1, wx.EXPAND)  # Add plot panel to main sizer
 
         panel.SetSizer(main_sizer)
+        self.data_queue_time = []
+        self.data_queue_PDcurrent = []
+
+        # Start a thread for data collection
+        self.thread = threading.Thread(
+            target=main.main(self.data_queue_time, self.data_queue_PDcurrent)
+        )
+        self.thread.daemon = True
+        self.thread.start()
 
     def on_select(self, event):
         wildcard = "All files (*.*)|*.*"  # You can customize the file types here
@@ -73,8 +91,19 @@ class MyFrame(wx.Frame):
         dialog.Destroy()
         # Sizer for layout
 
+    def get_fitting_function(self, PDcurrent):
+        fitting_code_path = self.file_text.GetValue()
+
+        # Load the module from the file path
+        spec = importlib.util.spec_from_file_location("fitting_code", fitting_code_path)
+        fitting_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fitting_module)
+        return fitting_code_path.f(PDcurrent)
+
     def on_generate_plot(self, event):
-        # Path to the Python file containing the plotting code
+        self.save_button.Enable()
+        self.save_data_button.Enable()
+        """# Path to the Python file containing the plotting code
         plotting_code_path = self.file_text.GetValue()
 
         # Load the module from the file path
@@ -83,22 +112,26 @@ class MyFrame(wx.Frame):
         )
         plotting_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(plotting_module)
-
+        """
         # Create a Matplotlib figure and canvas
         self.figure = Figure()  # Set initial figure size
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.plot_panel, -1, self.figure)
-        self.save_button.Enable()
+
         """if self.figure:
             self.figure.clear()
             self.canvas.Destroy()"""
 
         # Generating the plot
-        with contextlib.redirect_stdout(
-            None
-        ):  # Redirect stdout to suppress Matplotlib messages
-            plotting_module.generate_plot(self.axes)
+        # with contextlib.redirect_stdout(None):  # Redirect stdout to suppress Matplotlib messages
+
+        fitted_temp = [self.get_fitting_function(i) for i in self.data_queue_PDcurrent]
+        self.ax.clear()
+        self.ax.plot(self.data_queue_time, fitted_temp)
         self.canvas.draw()
+        print(fitted_temp)
+
+        # self.canvas.draw()
 
     def on_resize(self, event):
         if self.canvas:
@@ -110,6 +143,10 @@ class MyFrame(wx.Frame):
             )
             self.canvas.draw()
         # Resize the canvas when the window size changes
+
+    def on_stop(self, event):
+        pyro = photrix.pyrometer("COM1")
+        pyro.exit_continuous_mode()
 
     def on_save_plot(self, event):
         # Get current date and time

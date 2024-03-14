@@ -2,7 +2,7 @@
 import struct
 import photrix
 import time
-from queue import Queue
+import queue
 
 def decode_ieee754(data: bytes):
     if len(data) != 4:
@@ -14,8 +14,7 @@ def decode_ieee754(data: bytes):
 def plotting_callback():
     return
 
-import photrix
-import time
+
 
 class Connect:
     # Initialize pyro as a class attribute
@@ -30,11 +29,11 @@ class Connect:
         self.Time = []
         self.PDcurrents = []
         self.Temps = []
+        self.data_queue_time = queue.Queue()
+        self.data_queue_PDcurrent = queue.Queue()
         
 
     def generate_data(self,times,PDcurrent_list):
-        times=Queue.queue()
-        PDcurrent_list=Queue.queue()
 
         while True:
             # Access pyro using the class attribute
@@ -71,7 +70,6 @@ class Connect:
                 time_point = time.time()
                 self.Time.append(time_point)
         
-                self.PDcurrents.append(PDcurrent_point)
                 PDcurrent_list.put(PDcurrent_point)
                 times.put(time_point)
                 #times.append(time_point)

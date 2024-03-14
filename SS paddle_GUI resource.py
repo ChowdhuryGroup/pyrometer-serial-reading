@@ -1,4 +1,4 @@
-#fitting and plotting file for SS paddle --GUI file source
+# fitting and plotting file for SS paddle --GUI file source
 
 import SS_fitting as SS
 import main
@@ -12,15 +12,19 @@ import os
 from time import time
 
 
-#Priliminary test with plot temp read from pyrometer via serial port
-#plot for threads
+# Priliminary test with plot temp read from pyrometer via serial port
+# plot for threads
 # Function to plot data
-    
-    
 
 
-#add fitting and plot based received photodiode current
-def f(PDcurrent_point):   
-    f = interp1d(SS.poly_function(SS.T), SS.T,fill_value='extrapolate')
-    fitted_T=f(PDcurrent_point) #PDcurrent is fetched from serial port reading and process main.py using thread;
+# add fitting and plot based received photodiode current
+def f(PDcurrent_point):
+    f = interp1d(
+        SS.fit_function(SS.collated_temperatures),
+        SS.collated_temperatures,
+        fill_value="extrapolate",
+    )
+    fitted_T = f(
+        PDcurrent_point
+    )  # PDcurrent is fetched from serial port reading and process main.py using thread;
     return fitted_T

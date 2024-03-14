@@ -321,8 +321,8 @@ e6 = [0, 0, 2, 4, 6, 9, 12, 16, 22, 30, 41, 54, 68, 83]
 e6_cool = [68, 57, 42, 33, 25, 18, 14, 11, 7, 5, 3, 2, 1]
 
 degree = 4
-T = T3 + T4 + T5 + T6 + T3_cool + T4_cool + T5_cool + T6_cool
-PDcurrent = (
+collated_temperatures = T3 + T4 + T5 + T6 + T3_cool + T4_cool + T5_cool + T6_cool
+collated_photodiode_currents = (
     PDcurrent3
     + PDcurrent4
     + PDcurrent5
@@ -332,121 +332,141 @@ PDcurrent = (
     + PDcurrent5_cool
     + PDcurrent6_cool
 )
-coefficientsT = np.polyfit(T, PDcurrent, degree)
 
-sorted_indices = sorted(range(len(T)), key=lambda i: T[i])
+collated_data = zip(collated_temperatures, collated_photodiode_currents)
+collated_data = sorted(collated_data, key=lambda x: x[0])
 
-# Use the sorted indices to sort list2
-PDcurrent = [PDcurrent[i] for i in sorted_indices]
-
-T = sorted(T)
-# Generate y values for the polynomial curve
-poly_T = np.polyval(coefficientsT, T)
-residuals = PDcurrent - poly_T
-poly_function = np.poly1d(coefficientsT)
-print(poly_function)
-# Calculate mean squared error (MSE)
-mse = np.mean(residuals**2)
-
-
-def write_polynomial(coefficients):
-    degree = len(coefficients) - 1
-    terms = []
-
-    for i, coef in enumerate(coefficients):
-        if i == 0:
-            terms.append(f"{coef:.2e}")
-        else:
-            terms.append(f"{coef:.2e} * x^{i}")
-
-    polynomial = " + ".join(terms)
-    return polynomial
-
-
-x = sp.Symbol("x")
-T_solution = []
-
-# Define the equation
-T_inter = T
-PDcurrent_inter = PDcurrent
-for i in range(len(PDcurrent)):
-    f = interp1d(poly_function(T), T, fill_value="extrapolate")
-    # print(equation_expr)
-    solutions = f(PDcurrent[i])
-    print(solutions)
-    T_solution.append(solutions)
-T_difference = np.subtract(T_inter, T_solution)
-T_error = np.mean(T_difference**2)
-
-
-ax1 = ax[1].twinx()
-ax1.scatter(T, T_difference, label="offset temperature", color="pink")
-ax1.set_ylabel("SS temp - fit temperature /C")
-ax1.legend()
-
-ax[1].plot(
-    T,
-    poly_T,
-    marker="^",
-    label=f"fitting:{write_polynomial(coefficientsT)} \n with mse:{mse:.2e} \n with temperature rms-error:{np.sqrt(T_error):.2f}C",
+polyfit_coefficients = np.polynomial.Polynomial.fit(
+    collated_temperatures, collated_photodiode_currents, degree
 )
 
-ax[0].plot(p1, e1, marker="o", color="red", label="posiiton 1#1")
-ax[0].plot(p1_cool, e1_cool, marker="o", color="salmon", label="cool down posiiton 1#1")
-ax[0].plot(p2, e2, marker="o", color="purple", label="posiiton 1#2")
-ax[0].plot(
-    p2_cool, e2_cool, marker="o", color="lavender", label="cool down posiiton 1#2"
-)
-ax[0].plot(p3, e3, marker="o", color="green", label="posiiton 2")
-ax[0].plot(
-    p3_cool, e3_cool, marker="o", color="lightgreen", label="cool down posiiton 2"
-)
-ax[0].plot(p4, e4, marker="o", color="black", label="posiiton 3#1")
-ax[0].plot(p4_cool, e4_cool, marker="o", color="grey", label="cool down posiiton 3#1")
-ax[0].plot(p5, e5, marker="o", color="orange", label="posiiton 3#2")
-ax[0].plot(p5_cool, e5_cool, marker="o", color="yellow", label="cool down posiiton 3#2")
-ax[0].plot(p6, e6, marker="o", color="brown", label="posiiton 3#3")
-ax[0].plot(p6_cool, e6_cool, marker="o", color="tan", label="cool down posiiton 3#3")
-
-ax[0].set_xlabel("filament power/W")
-ax[0].set_ylabel("emission current/mA")
-ax[0].legend()
-
-ax[1].scatter(
-    T5_cool,
-    PDcurrent5_cool,
-    marker="o",
-    color="yellow",
-    label="cool down posiiton 3 #2",
-)
-ax[1].scatter(T5, PDcurrent5, marker="o", color="orange", label="posiiton 3 #2")
-ax[1].scatter(
-    T6_cool, PDcurrent6_cool, marker="o", color="tan", label="cool down posiiton 3 #3"
-)
-ax[1].scatter(T6, PDcurrent6, marker="o", color="brown", label="posiiton 3 #3")
-
-ax[1].scatter(
-    T4_cool, PDcurrent4_cool, marker="o", color="grey", label="cool down posiiton 3#1"
-)
-ax[1].scatter(T4, PDcurrent4, marker="o", color="black", label="posiiton 3#1")
-ax[1].scatter(
-    T3_cool,
-    PDcurrent3_cool,
-    marker="o",
-    color="lightgreen",
-    label="cool down posiiton 2",
-)
-ax[1].scatter(T3, PDcurrent3, marker="o", color="green", label="posiiton 2")
-# ax[1].scatter(T2_cool,PDcurrent2_cool,marker='o',color='lavender',label='cool down posiiton 1#2')
-# ax[1].scatter(T2,PDcurrent2,marker='o',color='purple',label='posiiton 1#2')
-# ax[1].scatter(T1_cool,PDcurrent1_cool,marker='o',color='salmon',label='cool down posiiton 1#1')
-# ax[1].scatter(T1,PDcurrent1,marker='o',color='red',label='posiiton 1#1')
-ax[1].set_xlabel("Temperature/C")
-ax[1].set_ylabel("photodiode current/A")
-# ax[1].set_ylabel('photodiode current/A')
-ax[1].set_title("Photodiode current vs SS temperature/pyrometer reading")
-ax[1].legend()
-# ax[1].set_yscale('log')
+fit_function = np.polynomial.Polynomial(polyfit_coefficients)
 
 
-# plt.show()
+if __name__ == "__main__":
+    # Generate y values for the polynomial curve
+    fit_photodiode_current = fit_function(polyfit_coefficients)
+    residuals = collated_photodiode_currents - fit_photodiode_current
+    print(fit_function)
+    # Calculate mean squared error (MSE)
+    mse = np.mean(residuals**2)
+
+    def write_polynomial(coefficients):
+        degree = len(coefficients) - 1
+        terms = []
+
+        for i, coef in enumerate(coefficients):
+            if i == 0:
+                terms.append(f"{coef:.2e}")
+            else:
+                terms.append(f"{coef:.2e} * x^{i}")
+
+        polynomial = " + ".join(terms)
+        return polynomial
+
+    x = sp.Symbol("x")
+    T_solution = []
+
+    # Define the equation
+    T_inter = collated_temperatures
+    PDcurrent_inter = collated_photodiode_currents
+    for i in range(len(collated_photodiode_currents)):
+        f = interp1d(
+            fit_function(collated_temperatures),
+            collated_temperatures,
+            fill_value="extrapolate",
+        )
+        # print(equation_expr)
+        solutions = f(collated_photodiode_currents[i])
+        print(solutions)
+        T_solution.append(solutions)
+    T_difference = np.subtract(T_inter, T_solution)
+    T_error = np.mean(T_difference**2)
+
+    ax1 = ax[1].twinx()
+    ax1.scatter(
+        collated_temperatures, T_difference, label="offset temperature", color="pink"
+    )
+    ax1.set_ylabel("SS temp - fit temperature /C")
+    ax1.legend()
+
+    ax[1].plot(
+        collated_temperatures,
+        fit_photodiode_current,
+        marker="^",
+        label=f"fitting:{write_polynomial(polyfit_coefficients)} \n with mse:{mse:.2e} \n with temperature rms-error:{np.sqrt(T_error):.2f}C",
+    )
+
+    ax[0].plot(p1, e1, marker="o", color="red", label="posiiton 1#1")
+    ax[0].plot(
+        p1_cool, e1_cool, marker="o", color="salmon", label="cool down posiiton 1#1"
+    )
+    ax[0].plot(p2, e2, marker="o", color="purple", label="posiiton 1#2")
+    ax[0].plot(
+        p2_cool, e2_cool, marker="o", color="lavender", label="cool down posiiton 1#2"
+    )
+    ax[0].plot(p3, e3, marker="o", color="green", label="posiiton 2")
+    ax[0].plot(
+        p3_cool, e3_cool, marker="o", color="lightgreen", label="cool down posiiton 2"
+    )
+    ax[0].plot(p4, e4, marker="o", color="black", label="posiiton 3#1")
+    ax[0].plot(
+        p4_cool, e4_cool, marker="o", color="grey", label="cool down posiiton 3#1"
+    )
+    ax[0].plot(p5, e5, marker="o", color="orange", label="posiiton 3#2")
+    ax[0].plot(
+        p5_cool, e5_cool, marker="o", color="yellow", label="cool down posiiton 3#2"
+    )
+    ax[0].plot(p6, e6, marker="o", color="brown", label="posiiton 3#3")
+    ax[0].plot(
+        p6_cool, e6_cool, marker="o", color="tan", label="cool down posiiton 3#3"
+    )
+
+    ax[0].set_xlabel("filament power/W")
+    ax[0].set_ylabel("emission current/mA")
+    ax[0].legend()
+
+    ax[1].scatter(
+        T5_cool,
+        PDcurrent5_cool,
+        marker="o",
+        color="yellow",
+        label="cool down posiiton 3 #2",
+    )
+    ax[1].scatter(T5, PDcurrent5, marker="o", color="orange", label="posiiton 3 #2")
+    ax[1].scatter(
+        T6_cool,
+        PDcurrent6_cool,
+        marker="o",
+        color="tan",
+        label="cool down posiiton 3 #3",
+    )
+    ax[1].scatter(T6, PDcurrent6, marker="o", color="brown", label="posiiton 3 #3")
+
+    ax[1].scatter(
+        T4_cool,
+        PDcurrent4_cool,
+        marker="o",
+        color="grey",
+        label="cool down posiiton 3#1",
+    )
+    ax[1].scatter(T4, PDcurrent4, marker="o", color="black", label="posiiton 3#1")
+    ax[1].scatter(
+        T3_cool,
+        PDcurrent3_cool,
+        marker="o",
+        color="lightgreen",
+        label="cool down posiiton 2",
+    )
+    ax[1].scatter(T3, PDcurrent3, marker="o", color="green", label="posiiton 2")
+    # ax[1].scatter(T2_cool,PDcurrent2_cool,marker='o',color='lavender',label='cool down posiiton 1#2')
+    # ax[1].scatter(T2,PDcurrent2,marker='o',color='purple',label='posiiton 1#2')
+    # ax[1].scatter(T1_cool,PDcurrent1_cool,marker='o',color='salmon',label='cool down posiiton 1#1')
+    # ax[1].scatter(T1,PDcurrent1,marker='o',color='red',label='posiiton 1#1')
+    ax[1].set_xlabel("Temperature/C")
+    ax[1].set_ylabel("photodiode current/A")
+    # ax[1].set_ylabel('photodiode current/A')
+    ax[1].set_title("Photodiode current vs SS temperature/pyrometer reading")
+    ax[1].legend()
+    # ax[1].set_yscale('log')
+    # plt.show()

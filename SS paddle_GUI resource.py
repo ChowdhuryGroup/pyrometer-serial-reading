@@ -20,7 +20,7 @@ from time import time
 # add fitting and plot based received photodiode current
 def f(PDcurrent_point):
     f = interp1d(
-        SS.fit_function(SS.collated_temperatures),
+        SS.current_from_temperature_fit(SS.collated_temperatures),
         SS.collated_temperatures,
         fill_value="extrapolate",
     )

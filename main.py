@@ -2,6 +2,8 @@ import struct
 import photrix
 import time
 import datetime
+import ss_fit
+import atexit
 
 
 def decode_ieee754(data: bytes):
@@ -12,12 +14,14 @@ def decode_ieee754(data: bytes):
     return struct.unpack(">f", data)[0]
 
 
-def plotting_callback():
-    return
-
-
 if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
+
+    data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
+    atexit.register(data_file.close)
+    data_file.write(
+        "Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\tElectronics_Temperature(C)\tPhotodiode_Temperature\n"
+    )
 
     pyro = photrix.pyrometer("COM1")
     # Should implement buffered reading, but that's for later
@@ -27,10 +31,10 @@ if __name__ == "__main__":
     electronics_temperature_bytes = bytearray()
     diode_temperature_bytes = bytearray()
 
-    data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv")
     start_time = time.time()
     times = []
     currents = []
+    fit_temperatures = []
     electronics_temperatures = []
     diode_temperatures = []
 
@@ -66,21 +70,31 @@ if __name__ == "__main__":
                 diode_temperature_bytes.extend(pyro.get_escaped_byte())
             diode_temperature = decode_ieee754(diode_temperature_bytes)
 
+        fit_temperature = ss_fit.temperature_from_current(current)
+
         output_string = ""
         if temperature_bytes != b"":
-            output_string += f"Temperature (C): {temperature:+e} "
+            output_string += f"Internal Temperature (C): {temperature:+e} "
+        output_string += f"Fit Temperature (C): {fit_temperature:+e}"
         if current_bytes != b"":
             output_string += f"Current (A): {current:+e} "
-        if electronics_temperature_bytes != b"":
-            output_string += f"Electronics Temp. (C): {electronics_temperature:+e} "
-        if diode_temperature_bytes != b"":
-            output_string += f"Diode Temp. (C): {diode_temperature:+e}"
+
+        if False:
+            if electronics_temperature_bytes != b"":
+                output_string += f"Electronics Temp. (C): {electronics_temperature:+e} "
+            if diode_temperature_bytes != b"":
+                output_string += f"Diode Temp. (C): {diode_temperature:+e}"
         print(output_string)
 
         times.append(time.time() - start_time)
         currents.append(current)
+        fit_temperatures.append(fit_temperature)
         electronics_temperatures.append(electronics_temperature)
         diode_temperatures.append(diode_temperature)
+
+        data_file.write(
+            f"{times[-1]}\t{current}\t{fit_temperature}\t{electronics_temperature}\t{diode_temperature}\n"
+        )
 
         """def makeplot():
             x_data, y_data = [], [] #PDcurrent

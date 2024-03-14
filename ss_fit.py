@@ -340,14 +340,16 @@ polyfit_coefficients = np.polynomial.Polynomial.fit(
     collated_temperatures, collated_photodiode_currents, degree
 )
 
-fit_function = np.polynomial.Polynomial(polyfit_coefficients)
+current_from_temperature_fit = np.polynomial.Polynomial(polyfit_coefficients)
+fit_photodiode_current = current_from_temperature_fit(collated_temperatures)
+temperature_from_current = interp1d(fit_photodiode_current, collated_temperatures)
 
 
 if __name__ == "__main__":
     # Generate y values for the polynomial curve
-    fit_photodiode_current = fit_function(polyfit_coefficients)
+
     residuals = collated_photodiode_currents - fit_photodiode_current
-    print(fit_function)
+    print(current_from_temperature_fit)
     # Calculate mean squared error (MSE)
     mse = np.mean(residuals**2)
 
@@ -372,7 +374,7 @@ if __name__ == "__main__":
     PDcurrent_inter = collated_photodiode_currents
     for i in range(len(collated_photodiode_currents)):
         f = interp1d(
-            fit_function(collated_temperatures),
+            current_from_temperature_fit(collated_temperatures),
             collated_temperatures,
             fill_value="extrapolate",
         )

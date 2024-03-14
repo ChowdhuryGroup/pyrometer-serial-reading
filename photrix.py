@@ -45,7 +45,7 @@ class pyrometer:
         atexit.register(self.exit_continuous_mode)
         self.reboot()
 
-        self.baud = self.determine_baud()
+        self.determine_baud()
         print(f"Baud successfully determined: {self.baud}")
 
         print("Replicating TemperaSure startup conversation")

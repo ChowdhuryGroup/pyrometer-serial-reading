@@ -16,11 +16,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import threading
-from queue import Queue
+import queue
 
-def generate_data(instance):
-        run=Connect()
-        run.generate_data(instance.data_queue_time, instance.data_queue_PDcurrent)
+
+
 class MyFrame(wx.Frame):
     
     def __init__(self):
@@ -68,18 +67,19 @@ class MyFrame(wx.Frame):
 
         panel.SetSizer(main_sizer)
 
-        class MyClass:
-            def __init__(self):
-                self.data_queue_time = Queue.queue()
-                self.data_queue_PDcurrent = Queue.queue() 
-        self.my_instance = MyClass()
-        self.thread = threading.Thread(target=generate_data, args=(self.my_instance,))
-        self.thread.daemon = True
-        self.thread.start()
-        
+        self.data_queue_time = queue.Queue()
+        self.data_queue_PDcurrent = queue.Queue() 
+        self.times=[]
+        self.PDcurrents=[]
+        self.fitted_temp=[]
+        self.elapse_time=[]
+    def generate_data(self):
+        self.data_instance = Connect()
+        self.data_instance.generate_data(self.data_queue_time, self.data_queue_PDcurrent)
+
     
         # Start a thread for data collection
-        
+    
 
     def on_select(self, event):
         wildcard = "All files (*.*)|*.*"  # You can customize the file types here
@@ -99,32 +99,8 @@ class MyFrame(wx.Frame):
         fitting_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(fitting_module)
         return fitting_module.f(PDcurrent)
-       
-
-    def on_generate_plot(self, event):
-        self.save_button.Enable()
-        self.save_data_button.Enable()
-        '''# Path to the Python file containing the plotting code
-        plotting_code_path = self.file_text.GetValue()
-
-        # Load the module from the file path
-        spec = importlib.util.spec_from_file_location("plotting_code", plotting_code_path)
-        plotting_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(plotting_module)
-        '''
-        # Create a Matplotlib figure and canvas
-        self.figure = Figure()  # Set initial figure size
-        self.axes = self.figure.add_subplot(111)
-        self.canvas = FigureCanvas(self.plot_panel, -1, self.figure)
-        self.axes.set_xlabel('Time/s')
-        self.axes.set_ylabel('Fitted Temperature/C from pyrometer photodiode current')
-        '''if self.figure:
-            self.figure.clear()
-            self.canvas.Destroy()'''
-
-        # Generating the plot
-        #with contextlib.redirect_stdout(None):  # Redirect stdout to suppress Matplotlib messages
-        while True:     
+    '''   
+     while True:     
             #print(self.my_instance.data_queue_PDcurrent)
         
             
@@ -137,15 +113,76 @@ class MyFrame(wx.Frame):
             self.fitted_temp = [self.get_fitting_function(i) for i in self.times]
             if self.figure:
                 self.axes.clear()
-                self.axes.scatter(self.times, self.fitted_temp)
-                self.canvas.draw()
-                
+            self.axes.scatter(self.times, self.fitted_temp)
+            self.canvas.draw()
                 #self.axes.scatter(self.my_instance.data_queue_time,self.fitted_temp)
-                self.canvas.draw()
+            print(self.times)
             
             #print(self.my_instance.data_queue_PDcurrent)
             #print(self.my_instance.data_queue_time)
-            time.sleep(0.01)
+            time.sleep(0.01)'''
+    def update_plot(self, time_point, PDcurrent_point):
+        if self.figure:
+            self.axes.clear()
+            self.axes.set_xlabel('Time/s')
+            self.axes.set_ylabel('Fitted Temperature/C from pyrometer photodiode current')
+        
+        # Add the new data points to the plot
+        self.axes.scatter(time_point, PDcurrent_point)
+        
+        # Optionally, you can add labels, title, or any other plot customization here
+        
+        # Redraw the canvas to update the plot
+        self.canvas.draw()
+    def plot_data(self):
+        while True:
+            try:
+                # Get the most recent data points from the queues
+                time_point = self.data_queue_time.get()  # Adjust timeout as needed
+                PDcurrent_point = self.data_queue_PDcurrent.get()  # Adjust timeout as needed
+                self.times.append(time_point)
+                if not self.elapse_time:
+                    self.elapse_time.append(0)
+                else:
+                    self.elapse_time.append(self.elapse_time[-1]+time_point-self.times[-2])
+                self.PDcurrents.append(PDcurrent_point)
+                fitted_temp_point=self.get_fitting_function(PDcurrent_point)
+                self.fitted_temp.append(fitted_temp_point)
+                # Update the plot with the new data points
+                self.update_plot(self.elapse_time, self.fitted_temp)
+            except queue.Empty:
+                pass  # Continue if the queue is empty
+    def on_generate_plot(self, event):
+        self.save_button.Enable()
+        self.save_data_button.Enable()
+        '''# Path to the Python file containing the plotting code
+        plotting_code_path = self.file_text.GetValue()
+
+        # Load the module from the file path
+        spec = importlib.util.spec_from_file_location("plotting_code", plotting_code_path)
+        plotting_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plotting_module)
+        '''
+        # Create a Matplotlib figure and canvas
+        self.figure = Figure(figsize=(10,8))  # Set initial figure size
+        self.axes = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.plot_panel, -1, self.figure)
+        
+        '''if self.figure:
+            self.figure.clear()
+            self.canvas.Destroy()'''
+        self.plot_thread = threading.Thread(target=self.generate_data)
+        self.plot_thread.daemon = True
+        self.plot_thread.start()
+
+        # Start the plotting thread
+        self.plot_thread = threading.Thread(target=self.plot_data)
+        self.plot_thread.daemon = True
+        self.plot_thread.start()
+        
+        # Generating the plot
+        #with contextlib.redirect_stdout(None):  # Redirect stdout to suppress Matplotlib messages
+       
         
         
         #self.canvas.draw()  
@@ -200,8 +237,8 @@ class MyFrame(wx.Frame):
                 
             with open(filepath, 'w') as file:
                 file.write("Time/C,Photodiode current/A,Fitted Temperature/C\n")
-                for i in range(len(self.my_instance.data_queue_time)):
-                    file.write(f"{self.my_instance.data_queue_time[i]},{self.my_instance.data_queue_PDcurrent[i]},{self.fitted_temp[i]}\n")
+                for i in range(len(self.times)):
+                    file.write(f"{self.times[i]},{self.PDcurrents[i]},{self.fitted_temp[i]}\n")
                 
             filename_dialog.Destroy()
         dialog.Destroy()

@@ -36,7 +36,7 @@ class pyrometer:
             stopbits=serial.STOPBITS_ONE,
             parity=serial.PARITY_NONE,
         )
-        self.connection.port = "COM1"
+        self.connection.port = port
 
         # Assume probe might be in continuous mode, reboot to get it into MODBUS mode
         # This is done because MODBUS is more controlled, and the probe waits for commands

@@ -319,6 +319,12 @@ e5_cool = [88, 73, 56, 43, 33, 25, 18, 14, 11, 7, 6, 3, 2, 0]
 e6 = [0, 0, 2, 4, 6, 9, 12, 16, 22, 30, 41, 54, 68, 83]
 e6_cool = [68, 57, 42, 33, 25, 18, 14, 11, 7, 5, 3, 2, 1]
 
+
+def standard_deviation(data, fit):
+    residual = data - fit
+    return np.sqrt(np.mean(residual**2) - np.mean(residual) ** 2)
+
+
 degree = 4
 collated_temperatures = np.array(
     T3 + T4 + T5 + T6 + T3_cool + T4_cool + T5_cool + T6_cool
@@ -333,18 +339,23 @@ collated_photodiode_currents = np.array(
     + PDcurrent5_cool
     + PDcurrent6_cool
 )
-
-collated_data = zip(collated_temperatures, collated_photodiode_currents)
-collated_data = sorted(collated_data, key=lambda x: x[0])
-
 fit_coefficients = np.polyfit(
     collated_temperatures, collated_photodiode_currents, degree
 )
 
+sorted_indices = sorted(
+    range(len(collated_temperatures)), key=lambda i: collated_temperatures[i]
+)
+
+# Use the sorted indices to sort list2
+collated_photodiode_currents = [collated_photodiode_currents[i] for i in sorted_indices]
+
+collated_temperatures = sorted(collated_temperatures)
 # Generate y values for the polynomial curve
-poly_T = np.polyval(fit_coefficients, collated_temperatures)
-residuals = collated_photodiode_currents - poly_T
+current_fit = np.polyval(fit_coefficients, collated_temperatures)
+current_residual = collated_photodiode_currents - current_fit
 poly_function = np.poly1d(fit_coefficients)
+current_error_stdev = standard_deviation(collated_photodiode_currents, current_fit)
 
 
 def write_polynomial(coefficients):
@@ -368,82 +379,108 @@ f = interp1d(
     collated_temperatures,
 )
 interpolated_temperature = f(collated_photodiode_currents)
-T_difference = collated_temperatures - interpolated_temperature
-T_error = np.mean(T_difference**2)
+for i in range(len(collated_photodiode_currents)):
+    # print(equation_expr)
+    solutions = f(collated_photodiode_currents[i])
+    # print(solutions)
+    interpolated_temperature[i] = solutions
 
-###################################
-# Plotting Stuff
-
-ax1 = ax[1].twinx()
-ax1.scatter(
-    collated_temperatures, T_difference, label="offset temperature", color="pink"
-)
-ax1.set_ylabel("SS temp - fit temperature /C")
-ax1.legend()
-
-ax[1].plot(
-    collated_temperatures,
-    poly_T,
-    marker="^",
-    label=f"fitting:{write_polynomial(fit_coefficients)} \n with mse:{T_error:.2e} \n with temperature rms-error:{np.sqrt(T_error):.2f}C",
+temperature_error_stdev = standard_deviation(
+    collated_temperatures, interpolated_temperature
 )
 
-ax[0].plot(p1, e1, marker="o", color="red", label="posiiton 1#1")
-ax[0].plot(p1_cool, e1_cool, marker="o", color="salmon", label="cool down posiiton 1#1")
-ax[0].plot(p2, e2, marker="o", color="purple", label="posiiton 1#2")
-ax[0].plot(
-    p2_cool, e2_cool, marker="o", color="lavender", label="cool down posiiton 1#2"
-)
-ax[0].plot(p3, e3, marker="o", color="green", label="posiiton 2")
-ax[0].plot(
-    p3_cool, e3_cool, marker="o", color="lightgreen", label="cool down posiiton 2"
-)
-ax[0].plot(p4, e4, marker="o", color="black", label="posiiton 3#1")
-ax[0].plot(p4_cool, e4_cool, marker="o", color="grey", label="cool down posiiton 3#1")
-ax[0].plot(p5, e5, marker="o", color="orange", label="posiiton 3#2")
-ax[0].plot(p5_cool, e5_cool, marker="o", color="yellow", label="cool down posiiton 3#2")
-ax[0].plot(p6, e6, marker="o", color="brown", label="posiiton 3#3")
-ax[0].plot(p6_cool, e6_cool, marker="o", color="tan", label="cool down posiiton 3#3")
+if __name__ == "__main__":
+    ###################################
+    # Plotting Stuff
 
-ax[0].set_xlabel("filament power/W")
-ax[0].set_ylabel("emission current/mA")
-ax[0].legend()
+    ax1 = ax[1].twinx()
+    ax1.scatter(
+        collated_temperatures,
+        collated_temperatures - interpolated_temperature,
+        label="offset temperature",
+        color="pink",
+    )
+    ax1.set_ylabel("SS temp - fit temperature /C")
+    ax1.legend()
 
-ax[1].scatter(
-    T5_cool,
-    PDcurrent5_cool,
-    marker="o",
-    color="yellow",
-    label="cool down posiiton 3 #2",
-)
-ax[1].scatter(T5, PDcurrent5, marker="o", color="orange", label="posiiton 3 #2")
-ax[1].scatter(
-    T6_cool, PDcurrent6_cool, marker="o", color="tan", label="cool down posiiton 3 #3"
-)
-ax[1].scatter(T6, PDcurrent6, marker="o", color="brown", label="posiiton 3 #3")
+    ax[1].plot(
+        collated_temperatures,
+        current_fit,
+        marker="^",
+        label=f"fitting:{write_polynomial(fit_coefficients)} \n with current error stdev:{current_error_stdev:.2e} \n with temperature error stdev:{np.sqrt(temperature_error_stdev):.2f}C",
+    )
 
-ax[1].scatter(
-    T4_cool, PDcurrent4_cool, marker="o", color="grey", label="cool down posiiton 3#1"
-)
-ax[1].scatter(T4, PDcurrent4, marker="o", color="black", label="posiiton 3#1")
-ax[1].scatter(
-    T3_cool,
-    PDcurrent3_cool,
-    marker="o",
-    color="lightgreen",
-    label="cool down posiiton 2",
-)
-ax[1].scatter(T3, PDcurrent3, marker="o", color="green", label="posiiton 2")
-# ax[1].scatter(T2_cool,PDcurrent2_cool,marker='o',color='lavender',label='cool down posiiton 1#2')
-# ax[1].scatter(T2,PDcurrent2,marker='o',color='purple',label='posiiton 1#2')
-# ax[1].scatter(T1_cool,PDcurrent1_cool,marker='o',color='salmon',label='cool down posiiton 1#1')
-# ax[1].scatter(T1,PDcurrent1,marker='o',color='red',label='posiiton 1#1')
-ax[1].set_xlabel("Temperature/C")
-ax[1].set_ylabel("photodiode current/A")
-# ax[1].set_ylabel('photodiode current/A')
-ax[1].set_title("Photodiode current vs SS temperature/pyrometer reading")
-ax[1].legend()
-# ax[1].set_yscale('log')
+    ax[0].plot(p1, e1, marker="o", color="red", label="posiiton 1#1")
+    ax[0].plot(
+        p1_cool, e1_cool, marker="o", color="salmon", label="cool down posiiton 1#1"
+    )
+    ax[0].plot(p2, e2, marker="o", color="purple", label="posiiton 1#2")
+    ax[0].plot(
+        p2_cool, e2_cool, marker="o", color="lavender", label="cool down posiiton 1#2"
+    )
+    ax[0].plot(p3, e3, marker="o", color="green", label="posiiton 2")
+    ax[0].plot(
+        p3_cool, e3_cool, marker="o", color="lightgreen", label="cool down posiiton 2"
+    )
+    ax[0].plot(p4, e4, marker="o", color="black", label="posiiton 3#1")
+    ax[0].plot(
+        p4_cool, e4_cool, marker="o", color="grey", label="cool down posiiton 3#1"
+    )
+    ax[0].plot(p5, e5, marker="o", color="orange", label="posiiton 3#2")
+    ax[0].plot(
+        p5_cool, e5_cool, marker="o", color="yellow", label="cool down posiiton 3#2"
+    )
+    ax[0].plot(p6, e6, marker="o", color="brown", label="posiiton 3#3")
+    ax[0].plot(
+        p6_cool, e6_cool, marker="o", color="tan", label="cool down posiiton 3#3"
+    )
 
+    ax[0].set_xlabel("filament power/W")
+    ax[0].set_ylabel("emission current/mA")
+    ax[0].legend()
 
-# plt.show()
+    ax[1].scatter(
+        T5_cool,
+        PDcurrent5_cool,
+        marker="o",
+        color="yellow",
+        label="cool down posiiton 3 #2",
+    )
+    ax[1].scatter(T5, PDcurrent5, marker="o", color="orange", label="posiiton 3 #2")
+    ax[1].scatter(
+        T6_cool,
+        PDcurrent6_cool,
+        marker="o",
+        color="tan",
+        label="cool down posiiton 3 #3",
+    )
+    ax[1].scatter(T6, PDcurrent6, marker="o", color="brown", label="posiiton 3 #3")
+
+    ax[1].scatter(
+        T4_cool,
+        PDcurrent4_cool,
+        marker="o",
+        color="grey",
+        label="cool down posiiton 3#1",
+    )
+    ax[1].scatter(T4, PDcurrent4, marker="o", color="black", label="posiiton 3#1")
+    ax[1].scatter(
+        T3_cool,
+        PDcurrent3_cool,
+        marker="o",
+        color="lightgreen",
+        label="cool down posiiton 2",
+    )
+    ax[1].scatter(T3, PDcurrent3, marker="o", color="green", label="posiiton 2")
+    # ax[1].scatter(T2_cool,PDcurrent2_cool,marker='o',color='lavender',label='cool down posiiton 1#2')
+    # ax[1].scatter(T2,PDcurrent2,marker='o',color='purple',label='posiiton 1#2')
+    # ax[1].scatter(T1_cool,PDcurrent1_cool,marker='o',color='salmon',label='cool down posiiton 1#1')
+    # ax[1].scatter(T1,PDcurrent1,marker='o',color='red',label='posiiton 1#1')
+    ax[1].set_xlabel("Temperature/C")
+    ax[1].set_ylabel("photodiode current/A")
+    # ax[1].set_ylabel('photodiode current/A')
+    ax[1].set_title("Photodiode current vs SS temperature/pyrometer reading")
+    ax[1].legend()
+    # ax[1].set_yscale('log')
+
+    # plt.show()

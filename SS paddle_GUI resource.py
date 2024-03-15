@@ -2,7 +2,6 @@
 
 import calibration.SS_fitting as SS
 from scipy.interpolate import interp1d
-import os
 from time import time
 
 
@@ -11,6 +10,7 @@ from time import time
 # Function to plot data
 
 
+# add fitting and plot based received photodiode current
 # add fitting and plot based received photodiode current
 def f(PDcurrent_point):
     f = interp1d(

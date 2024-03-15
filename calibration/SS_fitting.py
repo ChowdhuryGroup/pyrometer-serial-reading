@@ -1,8 +1,8 @@
 # SS paddle position 2 and #123 on position 3 based fitting
 import matplotlib.pyplot as plt
 import numpy as np
-import sympy as sp
 from scipy.interpolate import interp1d
+
 
 fig, ax = plt.subplots(2, 1)
 T1 = [400, 450, 498, 557, 595, 649, 699, 752, 795, 845, 898, 949, 1005, 1054]
@@ -320,8 +320,10 @@ e6 = [0, 0, 2, 4, 6, 9, 12, 16, 22, 30, 41, 54, 68, 83]
 e6_cool = [68, 57, 42, 33, 25, 18, 14, 11, 7, 5, 3, 2, 1]
 
 degree = 4
-T = T3 + T4 + T5 + T6 + T3_cool + T4_cool + T5_cool + T6_cool
-PDcurrent = (
+collated_temperatures = np.array(
+    T3 + T4 + T5 + T6 + T3_cool + T4_cool + T5_cool + T6_cool
+)
+collated_photodiode_currents = np.array(
     PDcurrent3
     + PDcurrent4
     + PDcurrent5
@@ -331,25 +333,21 @@ PDcurrent = (
     + PDcurrent5_cool
     + PDcurrent6_cool
 )
-coefficientsT = np.polyfit(T, PDcurrent, degree)
 
-sorted_indices = sorted(range(len(T)), key=lambda i: T[i])
+collated_data = zip(collated_temperatures, collated_photodiode_currents)
+collated_data = sorted(collated_data, key=lambda x: x[0])
 
-# Use the sorted indices to sort list2
-PDcurrent = [PDcurrent[i] for i in sorted_indices]
+fit_coefficients = np.polyfit(
+    collated_temperatures, collated_photodiode_currents, degree
+)
 
-T = sorted(T)
 # Generate y values for the polynomial curve
-poly_T = np.polyval(coefficientsT, T)
-residuals = PDcurrent - poly_T
-poly_function = np.poly1d(coefficientsT)
-# print(poly_function)
-# Calculate mean squared error (MSE)
-mse = np.mean(residuals**2)
+poly_T = np.polyval(fit_coefficients, collated_temperatures)
+residuals = collated_photodiode_currents - poly_T
+poly_function = np.poly1d(fit_coefficients)
 
 
 def write_polynomial(coefficients):
-    degree = len(coefficients) - 1
     terms = []
 
     for i, coef in enumerate(coefficients):
@@ -362,32 +360,32 @@ def write_polynomial(coefficients):
     return polynomial
 
 
-x = sp.Symbol("x")
-T_solution = []
+interpolated_temperature = np.zeros_like(collated_photodiode_currents)
 
 # Define the equation
-T_inter = T
-PDcurrent_inter = PDcurrent
-for i in range(len(PDcurrent)):
-    f = interp1d(poly_function(T), T, fill_value="extrapolate")
-    # print(equation_expr)
-    solutions = f(PDcurrent[i])
-    # print(solutions)
-    T_solution.append(solutions)
-T_difference = np.subtract(T_inter, T_solution)
+f = interp1d(
+    poly_function(collated_temperatures),
+    collated_temperatures,
+)
+interpolated_temperature = f(collated_photodiode_currents)
+T_difference = collated_temperatures - interpolated_temperature
 T_error = np.mean(T_difference**2)
 
+###################################
+# Plotting Stuff
 
 ax1 = ax[1].twinx()
-ax1.scatter(T, T_difference, label="offset temperature", color="pink")
+ax1.scatter(
+    collated_temperatures, T_difference, label="offset temperature", color="pink"
+)
 ax1.set_ylabel("SS temp - fit temperature /C")
 ax1.legend()
 
 ax[1].plot(
-    T,
+    collated_temperatures,
     poly_T,
     marker="^",
-    label=f"fitting:{write_polynomial(coefficientsT)} \n with mse:{mse:.2e} \n with temperature rms-error:{np.sqrt(T_error):.2f}C",
+    label=f"fitting:{write_polynomial(fit_coefficients)} \n with mse:{T_error:.2e} \n with temperature rms-error:{np.sqrt(T_error):.2f}C",
 )
 
 ax[0].plot(p1, e1, marker="o", color="red", label="posiiton 1#1")

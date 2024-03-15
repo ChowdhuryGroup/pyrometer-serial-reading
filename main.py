@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
     atexit.register(data_file.close)
-    data_file.write("Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)")
+    data_file.write("Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\n")
 
     temperature_bytes = bytearray()
     current_bytes = bytearray()

@@ -97,10 +97,12 @@ class pyrometer:
     def continuous_mode_read(self) -> bytes:
         time.sleep(0.1)
         result = self.connection.read_all()
-        if result == b'':
+        if result == b"":
             return False
         if result[-1] != 3:
-            input(f"The result should end with 0x03, but is {result[-1].to_bytes(1,'big').hex()}")
+            input(
+                f"The result should end with 0x03, but is {result[-1].to_bytes(1,'big').hex()}"
+            )
         return result[1:-1]
 
     def enter_continuous_mode(self):
@@ -219,18 +221,19 @@ class pyrometer:
             results.append(self.continuous_mode_read())
 
         print("Waiting for continuous reading startup...")
-        self.connection.timeout=None
+        self.connection.timeout = None
         result = self.connection.read(12)
-        if result != b'\x25\x30\x31\x30\x31\x33\x32\x30\x41\x30\x30\x0D':
+        if result != b"\x25\x30\x31\x30\x31\x33\x32\x30\x41\x30\x30\x0D":
             print("Final output before streaming is wrong...")
             print(result)
 
     def get_unescaped_byte(self) -> bytes:
+        self.connection.timeout = None
         return self.connection.read(1)
-    
+
     def get_escaped_byte(self) -> bytes:
         result = self.connection.read(1)
-        if result == b'\x80':
+        if result == b"\x80":
             return self.connection.read(1)
         return result
 

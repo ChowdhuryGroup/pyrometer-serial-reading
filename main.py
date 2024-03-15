@@ -2,6 +2,10 @@
 import struct
 import photrix
 import time
+import datetime
+import atexit
+import SS_fitting
+
 
 def decode_ieee754(data: bytes):
     if len(data) != 4:
@@ -9,6 +13,7 @@ def decode_ieee754(data: bytes):
             "Buffer length must be 4 bytes for IEEE 754 single precision float"
         )
     return struct.unpack(">f", data)[0]
+
 
 def plotting_callback():
     return
@@ -20,10 +25,16 @@ if __name__ == "__main__":
     pyro = photrix.pyrometer("COM1")
     # Should implement buffered reading, but that's for later
 
+    data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
+    atexit.register(data_file.close)
+    data_file.write("Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)")
+
     temperature_bytes = bytearray()
     current_bytes = bytearray()
     electronics_temperature_bytes = bytearray()
     diode_temperature_bytes = bytearray()
+    current = -1
+    fit_temperature = -1
 
     print("Starting stream read...")
     start_time = time.time()
@@ -56,13 +67,21 @@ if __name__ == "__main__":
 
         output_string = ""
         measurement_time = time.time() - start_time
-        output_string += f"Time (s): {measurement_time} "
-        if temperature_bytes != b"":
-            output_string += f"Temperature (C): {decode_ieee754(temperature_bytes):+e} "
+        output_string += f"Time (s): {measurement_time:6.2f} "
+
         if current_bytes != b"":
-            output_string += f"Current (A): {decode_ieee754(current_bytes):+e} "
-        
+            current = decode_ieee754(current_bytes)
+            # TemperaSure Sets negative values to 1.e-17, and Zhihan wants to replicate this behavior
+            if current < 0:
+                current = 1.0e-17
+            output_string += f"Current (A): {current:+e} "
+            fit_temperature = SS_fitting.temperature_from_current(current)
+            output_string += f"Fit Temperature (C): {fit_temperature:+e}"
+
         if False:
+            if temperature_bytes != b"":
+                temperature = decode_ieee754(temperature_bytes)
+                output_string += f"Temperature (C): {temperature:+e} "
             if electronics_temperature_bytes != b"":
                 output_string += f"Electronics Temp. (C): {decode_ieee754(electronics_temperature_bytes):+e} "
             if diode_temperature_bytes != b"":
@@ -70,3 +89,4 @@ if __name__ == "__main__":
                     f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
                 )
         print(output_string)
+        data_file.write(f"{measurement_time}\t{current}\t{fit_temperature}\n")

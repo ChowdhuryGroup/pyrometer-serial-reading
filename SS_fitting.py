@@ -374,22 +374,25 @@ def write_polynomial(coefficients):
 interpolated_temperature = np.zeros_like(collated_photodiode_currents)
 
 # Define the equation
-f = interp1d(
+temperature_from_current = interp1d(
     poly_function(collated_temperatures),
     collated_temperatures,
+    bounds_error=None,
+    fill_value=-1,
 )
-interpolated_temperature = f(collated_photodiode_currents)
-for i in range(len(collated_photodiode_currents)):
-    # print(equation_expr)
-    solutions = f(collated_photodiode_currents[i])
-    # print(solutions)
-    interpolated_temperature[i] = solutions
 
-temperature_error_stdev = standard_deviation(
-    collated_temperatures, interpolated_temperature
-)
 
 if __name__ == "__main__":
+    interpolated_temperature = temperature_from_current(collated_photodiode_currents)
+    for i in range(len(collated_photodiode_currents)):
+        # print(equation_expr)
+        solutions = temperature_from_current(collated_photodiode_currents[i])
+        # print(solutions)
+        interpolated_temperature[i] = solutions
+
+    temperature_error_stdev = standard_deviation(
+        collated_temperatures, interpolated_temperature
+)
     ###################################
     # Plotting Stuff
 

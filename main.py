@@ -4,7 +4,7 @@ import time
 import datetime
 import ss_fit
 import atexit
-import wxGUI_point_to_point
+import gui
 
 use_GUI = False
 
@@ -18,7 +18,7 @@ def decode_ieee754(data: bytes):
 
 
 if use_GUI:
-    gui = wxGUI_point_to_point.MyFrame()
+    gui = gui.MyFrame()
 
 # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 

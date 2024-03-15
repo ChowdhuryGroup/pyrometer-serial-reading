@@ -107,12 +107,14 @@ T_error_high = np.mean(T_difference_high**2)
 
 def temperature_from_current(current):
     if current <= 1e-7:
-        f = interp1d(poly_function_low(T_low), T_low, fill_value="extrapolate")
+        f = interp1d(poly_function_low(T_low), T_low, fill_value=-1, bounds_error=False)
         fitted_T = f(
             current
         )  # PDcurrent is fetched from serial port reading and process main.py using thread;
     else:
-        f = interp1d(poly_function_high(T_high), T_high, fill_value="extrapolate")
+        f = interp1d(
+            poly_function_high(T_high), T_high, fill_value=-1, bounds_error=False
+        )
         fitted_T = f(
             current
         )  # PDcurrent is fetched from serial port reading and process main.py using thread;

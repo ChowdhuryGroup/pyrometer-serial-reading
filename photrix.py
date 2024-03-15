@@ -232,6 +232,7 @@ class pyrometer:
         return self.connection.read(1)
 
     def get_escaped_byte(self) -> bytes:
+        self.connection.timeout = None
         result = self.connection.read(1)
         if result == b"\x80":
             return self.connection.read(1)

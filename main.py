@@ -22,7 +22,7 @@ def plotting_callback():
 if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 
-    pyro = photrix.pyrometer("COM1")
+    pyro = photrix.pyrometer("COM3")
     # Should implement buffered reading, but that's for later
 
     data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
@@ -38,6 +38,7 @@ if __name__ == "__main__":
 
     print("Starting stream read...")
     start_time = time.time()
+    i = 0
     while True:
         header_byte = pyro.get_unescaped_byte()
         if header_byte == b"\x80":
@@ -64,6 +65,7 @@ if __name__ == "__main__":
                 electronics_temperature_bytes.extend(pyro.get_escaped_byte())
             for _ in range(4):
                 diode_temperature_bytes.extend(pyro.get_escaped_byte())
+        pyro.connection.reset_input_buffer()
 
         output_string = ""
         measurement_time = time.time() - start_time

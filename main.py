@@ -1,6 +1,7 @@
 # pyrometer serial reading ieee754
 import struct
 import photrix
+import time
 
 def decode_ieee754(data: bytes):
     if len(data) != 4:
@@ -25,6 +26,7 @@ if __name__ == "__main__":
     diode_temperature_bytes = bytearray()
 
     print("Starting stream read...")
+    start_time = time.time()
     while True:
         header_byte = pyro.get_unescaped_byte()
         if header_byte == b"\x80":
@@ -53,14 +55,18 @@ if __name__ == "__main__":
                 diode_temperature_bytes.extend(pyro.get_escaped_byte())
 
         output_string = ""
+        measurement_time = time.time() - start_time
+        output_string += f"Time (s): {measurement_time} "
         if temperature_bytes != b"":
             output_string += f"Temperature (C): {decode_ieee754(temperature_bytes):+e} "
         if current_bytes != b"":
             output_string += f"Current (A): {decode_ieee754(current_bytes):+e} "
-        if electronics_temperature_bytes != b"":
-            output_string += f"Electronics Temp. (C): {decode_ieee754(electronics_temperature_bytes):+e} "
-        if diode_temperature_bytes != b"":
-            output_string += (
-                f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
-            )
+        
+        if False:
+            if electronics_temperature_bytes != b"":
+                output_string += f"Electronics Temp. (C): {decode_ieee754(electronics_temperature_bytes):+e} "
+            if diode_temperature_bytes != b"":
+                output_string += (
+                    f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
+                )
         print(output_string)

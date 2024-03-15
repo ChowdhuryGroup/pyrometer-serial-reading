@@ -27,7 +27,7 @@ AMBIENT_HEADER = b"\x84"  # 8 data bytes
 
 class pyrometer:
 
-    def __init__(self, port: str):
+    def __init__(self, port: str = "COM1"):
         # Configure the serial port
         self.connection = serial.Serial(
             baudrate=115200,
@@ -36,7 +36,7 @@ class pyrometer:
             stopbits=serial.STOPBITS_ONE,
             parity=serial.PARITY_NONE,
         )
-        self.connection.port = "COM1"
+        self.connection.port = port
 
         # Assume probe might be in continuous mode, reboot to get it into MODBUS mode
         # This is done because MODBUS is more controlled, and the probe waits for commands
@@ -46,7 +46,7 @@ class pyrometer:
         self.reboot()
 
         self.determine_baud()
-        print(f"Baud successfully determined: {self.baud}")
+        print(f"Baud successfully determined: {self.connection.baudrate}")
 
         print("Replicating TemperaSure startup conversation")
         self.startup_conversation()

@@ -2,7 +2,8 @@ import struct
 import photrix
 import time
 import datetime
-import calibration.SS_fitting
+
+# import calibration.SS_fitting
 import atexit
 import gui
 
@@ -42,6 +43,8 @@ currents = []
 fit_temperatures = []
 electronics_temperatures = []
 diode_temperatures = []
+temperature = -1
+current = -1
 
 print("Starting stream read...")
 while True:
@@ -75,28 +78,27 @@ while True:
             diode_temperature_bytes.extend(pyro.get_escaped_byte())
         diode_temperature = decode_ieee754(diode_temperature_bytes)
 
-    fit_temperature = calibration.SS_fitting.interpolated_temperature(current)
+    fit_temperature = 0.0  # calibration.SS_fitting.interpolated_temperature(current)
 
     times.append(time.time() - start_time)
-    currents.append(current)
+
     fit_temperatures.append(fit_temperature)
-    electronics_temperatures.append(electronics_temperature)
-    diode_temperatures.append(diode_temperature)
 
     output_string = f"Time: {times[-1]:6.2f} "
     if temperature_bytes != b"":
-        output_string += f"Internal Temperature (C): {temperature:+e} "
-    output_string += f"Fit Temperature (C): {fit_temperature:+e}"
+        output_string += f"TS Temperature (C): {temperature:+e} "
+    output_string += f"Fit Temperature (C): {fit_temperature:+e} "
     if current_bytes != b"":
+        currents.append(current)
         output_string += f"Current (A): {current:+e} "
     if False:
         if electronics_temperature_bytes != b"":
+            electronics_temperatures.append(electronics_temperature)
             output_string += f"Electronics Temp. (C): {electronics_temperature:+e} "
         if diode_temperature_bytes != b"":
+            diode_temperatures.append(diode_temperature)
             output_string += f"Diode Temp. (C): {diode_temperature:+e}"
 
     print(output_string)
 
-    data_file.write(
-        f"{times[-1]}\t{current}\t{fit_temperature}\t{electronics_temperature}\t{diode_temperature}\n"
-    )
+    data_file.write(f"{times[-1]}\t{current}\t{fit_temperature}\n")

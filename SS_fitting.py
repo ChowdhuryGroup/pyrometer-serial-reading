@@ -1,8 +1,10 @@
+# written by Zhihan on 2024-03-16 Github uploaded
 # fitting eheating low temp and high temp fitting with 1e-7A photodiode current break point
 # data from 2024-03-15-1450
 # fitted temperature check
 # SS paddle position 2 and #123 on position 3 based fitting
 import matplotlib.pyplot as plt
+import loop_finding_breakpoint_for_eheating_fitting as LL
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -45,97 +47,79 @@ PDcurrent_cool = [
 ]
 PDcurrent = PDcurrent_heat + PDcurrent_cool
 
+# # Incorporating data from 2024-03-15
+# manual_data = np.loadtxt("calibration/2024-03-15_1836.csv", delimiter=",", skiprows=1)
+# pyro_data = np.loadtxt("calibration/2024-03-15_18-34-19.tsv", skiprows=1)
+# fit_interpolated = interp1d(pyro_data[:, 0], pyro_data[:, 2])
 
-fig, ax = plt.subplots(2, 1)
-degree = 4
-sorted_indices = sorted(range(len(T)), key=lambda i: T[i])
-# Use the sorted indices to sort list2
-PDcurrent = [PDcurrent[i] for i in sorted_indices]
-T = sorted(T)
-T_low = []
-PDcurrent_low = []
-T_high = []
-PDcurrent_high = []
-for i in range(len(PDcurrent)):
-    if PDcurrent[i] <= 1e-7:
-        PDcurrent_low.append(PDcurrent[i])
-        T_low.append(T[i])
-    else:
-        PDcurrent_high.append(PDcurrent[i])
-        T_high.append(T[i])
-coefficientsT_low = np.polyfit(T_low, PDcurrent_low, degree)
-coefficientsT_high = np.polyfit(T_high, PDcurrent_high, degree)
+# # Select only data above 500C, where filament background is small
+# mask_500C = manual_data[:, 1] > 500.0
+# T += list(manual_data[mask_500C, 1])
+# PDcurrent += list(fit_interpolated(manual_data[mask_500C, 0]))
 
-# Generate y values for the polynomial curve
-poly_T_low = np.polyval(coefficientsT_low, T_low)
-residuals_low = np.subtract(PDcurrent_low, poly_T_low)
-poly_function_low = np.poly1d(coefficientsT_low)
-poly_T_high = np.polyval(coefficientsT_high, T_high)
-residuals_high = np.subtract(PDcurrent_high, poly_T_high)
-poly_function_high = np.poly1d(coefficientsT_high)
-# print(poly_function)
-# Calculate mean squared error (MSE)
-mse_low = np.mean(residuals_low**2)
-mse_high = np.mean(residuals_high**2)
+breakpoint = [2.435297297154193e-09, 4.5e-09, 2e-07]
+PDcurrent_fraction, T_fraction = LL.fraction_generate(PDcurrent, T, breakpoint)
+fitted_functions = {}
+T_differences = {}
+T_Errors = {}
+poly_Ts = {}
+f_catalogs = {}
+PDcurrent, T = LL.sort_lists(PDcurrent, T)
+for (PDcurrent_key_list, PDcurrent_list), (T_key_list, T_list) in zip(
+    PDcurrent_fraction.items(), T_fraction.items()
+):
+    sec_fitted_function, T_difference, T_error, poly_T, f_catalog = (
+        LL.sec_fitting_generate(PDcurrent_list, T_list)
+    )
+    fitted_functions[PDcurrent_key_list] = sec_fitted_function
+    T_differences[PDcurrent_key_list] = T_difference
+    T_Errors[PDcurrent_key_list] = T_error
+    f_catalogs[PDcurrent_key_list] = f_catalog
+    # print(poly_T)
+    poly_Ts[PDcurrent_key_list] = poly_T
 
 
-# Define the equation
-T_solution_low = []
-T_solution_high = []
-
-
-for i in range(len(PDcurrent_low)):
-    f_low = interp1d(poly_function_low(T_low), T_low, fill_value="extrapolate")
-    # print(equation_expr)
-    # print('see if works for high temp',f(1e-4))
-    solutions_low = f_low(PDcurrent_low[i])
-    # print(solutions)
-    T_solution_low.append(solutions_low)
-for i in range(len(PDcurrent_high)):
-    f_high = interp1d(poly_function_high(T_high), T_high, fill_value="extrapolate")
-    # print(equation_expr)
-    # print('see if works for high temp',f(1e-4))
-    solutions_high = f_high(PDcurrent_high[i])
-    # print(solutions)
-    T_solution_high.append(solutions_high)
-# print(fitted_temp)
-T_difference_high = np.subtract(T_high, T_solution_high)
-T_difference_low = np.subtract(T_low, T_solution_low)
-T_error_low = np.mean(T_difference_low**2)
-T_error_high = np.mean(T_difference_high**2)
-
-
-def temperature_from_current(current):
-    if current <= 1e-7:
-        f = interp1d(poly_function_low(T_low), T_low, fill_value=-1, bounds_error=False)
-        fitted_T = f(
-            current
-        )  # PDcurrent is fetched from serial port reading and process main.py using thread;
-    else:
-        f = interp1d(
-            poly_function_high(T_high), T_high, fill_value=-1, bounds_error=False
-        )
-        fitted_T = f(
-            current
-        )  # PDcurrent is fetched from serial port reading and process main.py using thread;
-    return fitted_T
+def temperature_from_current(PDcurrent_point):
+    for i in range(len(breakpoint) - 1):
+        if breakpoint[i] <= PDcurrent_point <= breakpoint[i + 1]:
+            fitt_fun = f_catalogs[
+                f"{breakpoint[i]} <= PDcurrent[j]< {breakpoint[i + 1]}"
+            ](PDcurrent_point)
+    if breakpoint[0] > PDcurrent_point:
+        fitt_fun = f_catalogs[f" PDcurrent[j]< {breakpoint[0]}"](PDcurrent_point)
+    elif PDcurrent_point > breakpoint[-1]:
+        fitt_fun = f_catalogs[f"PDcurrent[j]> {breakpoint[-1]}"](PDcurrent_point)
+    return fitt_fun
 
 
 if __name__ == "__main__":
-    ax[0].plot(
-        T_low,
-        poly_T_low,
-        color="blue",
-        label=f"fitting:{poly_function_low} \n with mse:{mse_low:.2e} \n with temperature rms-error:{np.sqrt(T_error_low):.2f}C",
-    )
-    ax[0].plot(
-        T_high,
-        poly_T_high,
-        color="red",
-        label=f"fitting:{poly_function_high} \n with mse:{mse_high:.2e} \n with temperature rms-error:{np.sqrt(T_error_high):.2f}C",
-    )
-    ax[0].scatter(T, PDcurrent)
-    ax[0].set_xlabel("SS paddle Temperature/C")
-    ax[0].set_ylabel("Photodiode current/A")
-    ax[0].legend()
-    plt.show()
+    plot = False
+    repl = False
+
+    if plot:
+        fit_temperature = []
+        for i in range(len(pyro_data[:, 1])):
+            fit_temperature.append(temperature_from_current(pyro_data[i, 1]))
+
+        plt.scatter(
+            manual_data[:, 0], manual_data[:, 1], label="Thermocouple Temp. (C)", s=2.0
+        )
+        plt.scatter(pyro_data[:, 0], fit_temperature, label="Fit Temp. (C)", s=2.0)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Temperature (C)")
+        plt.legend()
+        plt.show()
+
+        fit_interpolated = interp1d(pyro_data[:, 0], fit_temperature)
+        plt.scatter(
+            manual_data[:, 0], fit_interpolated(manual_data[:, 0]) - manual_data[:, 1]
+        )
+        plt.xlabel("Time (s)")
+        plt.ylabel("Temperature Error (C)")
+        plt.title("Discrepancy between fit and Thermocouple temperature")
+        plt.show()
+
+    if repl:
+        while True:
+            current = float(input("Enter a photodiode current in Amps: "))
+            print(f"Corresponding Temperature (C): {temperature_from_current(current)}")

@@ -46,6 +46,8 @@ class pyrometer:
         self.reboot()
 
         self.baud = self.determine_baud()
+        if self.baud == None:
+            raise ValueError("No valid baud is working, check serial connection")
         print(f"Baud successfully determined: {self.baud}")
 
         print("Replicating TemperaSure startup conversation")

@@ -71,7 +71,7 @@ class pyrometer:
     def open_serial_connection(self):
         # This is equivalent to IOCTL_SERIAL_CLR_RTS, and is essential for probe to respond
         # By default, pyserial sets RTS pin high
-        self.connection.rts = 0
+        self.connection.rts = False
         self.connection.open()
 
     def ping(self) -> bool:
@@ -83,7 +83,7 @@ class pyrometer:
             print("Probe didn't respond to ping...")
             return False
 
-    def determine_baud(self) -> int:
+    def determine_baud(self) -> int | None:
         possible_bauds = [115200, 9600, 19200, 38400, 57600]
         for baud in possible_bauds:
             print(f"Testing for connection with {baud} baud")
@@ -96,10 +96,10 @@ class pyrometer:
         bytes_to_send = b"".join([COMMAND_START, command_bytes, COMMAND_END])
         self.connection.write(bytes_to_send)
 
-    def continuous_mode_read(self) -> bytes:
+    def continuous_mode_read(self) -> bytes | bool:
         time.sleep(0.1)
         result = self.connection.read_all()
-        if result == b"":
+        if (result == b"") or (result == None):
             return False
         if result[-1] != 3:
             input(
@@ -244,6 +244,8 @@ class pyrometer:
     def start_sending_combined(self):
         self.continuous_mode_command(START_COMBINED)
         result = self.continuous_mode_read()
+        if type(result) == bool:
+            return False
         print(result.hex())
 
     # Manual specifies this, but haven't gotten to work

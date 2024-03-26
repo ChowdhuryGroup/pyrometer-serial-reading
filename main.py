@@ -4,7 +4,7 @@ import photrix
 import time
 import datetime
 import atexit
-import SS_fitting
+import Ta_fitting
 
 
 def decode_ieee754(data: bytes):
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             if current < 0:
                 current = 1.0e-17
             output_string += f"Current (A): {current:+e} "
-            fit_temperature = SS_fitting.temperature_from_current(current)
+            fit_temperature = Ta_fitting.temperature_from_current(current)
             output_string += f"Fit Temperature (C): {fit_temperature:+e}"
 
         if False:

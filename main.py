@@ -5,6 +5,7 @@ import time
 import datetime
 import atexit
 import Ta_fitting
+import arduino_thermocouple
 
 
 def decode_ieee754(data: bytes):
@@ -15,19 +16,18 @@ def decode_ieee754(data: bytes):
     return struct.unpack(">f", data)[0]
 
 
-def plotting_callback():
-    return
-
-
 if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 
     pyro = photrix.pyrometer("COM3")
+    arduino = arduino_thermocouple.Arduino("COM4")
     # Should implement buffered reading, but that's for later
 
     data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
     atexit.register(data_file.close)
-    data_file.write("Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\n")
+    data_file.write(
+        "Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\tSputter_Gun_Temperature(C)\n"
+    )
 
     temperature_bytes = bytearray()
     current_bytes = bytearray()
@@ -90,5 +90,11 @@ if __name__ == "__main__":
                 output_string += (
                     f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
                 )
+
+        _, sputter_temperature = arduino.get_temperatures()
+        output_string += f" Sputter Gun Temperature (C): {sputter_temperature:+e}"
+
         print(output_string)
-        data_file.write(f"{measurement_time}\t{current}\t{fit_temperature}\n")
+        data_file.write(
+            f"{measurement_time}\t{current}\t{fit_temperature}\t{sputter_temperature}\n"
+        )

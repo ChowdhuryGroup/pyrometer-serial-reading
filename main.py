@@ -5,7 +5,6 @@ import time
 import datetime
 import atexit
 import SS_fitting
-import arduino_thermocouple
 
 
 def decode_ieee754(data: bytes):
@@ -20,10 +19,9 @@ if __name__ == "__main__":
     # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 
     pyro = photrix.pyrometer("COM1")
-    arduino = arduino_thermocouple.Arduino("COM3")
     # Should implement buffered reading, but that's for later
 
-    data_file = open(f"{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
+    data_file = open(f"data/{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
     atexit.register(data_file.close)
     data_file.write(
         "Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\tSputter_Gun_Temperature(C)\n"
@@ -92,9 +90,6 @@ if __name__ == "__main__":
                     f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
                 )
 
-        if i%2 == 0:
-            # MAX6675 can only sample at up to 4Hz, and the pyro responds at 5Hz
-            _, sputter_temperature = arduino.get_temperatures()
         output_string += f" Sputter Gun Temperature (C): {sputter_temperature:+e}"
 
         print(output_string)
@@ -102,4 +97,4 @@ if __name__ == "__main__":
             f"{measurement_time}\t{current}\t{fit_temperature}\t{sputter_temperature}\n"
         )
 
-        i +=1
+        i += 1

@@ -83,7 +83,7 @@ class pyrometer:
             print("Probe didn't respond to ping...")
             return False
 
-    def determine_baud(self) -> int | None:
+    def determine_baud(self):
         possible_bauds = [115200, 9600, 19200, 38400, 57600]
         for baud in possible_bauds:
             print(f"Testing for connection with {baud} baud")
@@ -96,7 +96,7 @@ class pyrometer:
         bytes_to_send = b"".join([COMMAND_START, command_bytes, COMMAND_END])
         self.connection.write(bytes_to_send)
 
-    def continuous_mode_read(self) -> bytes | bool:
+    def continuous_mode_read(self):
         time.sleep(0.1)
         result = self.connection.read_all()
         if (result == b"") or (result == None):

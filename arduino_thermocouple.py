@@ -34,7 +34,7 @@ class Arduino:
 
 
 if __name__ == "__main__":
-    test = Arduino("COM4")
+    test = Arduino("COM3")
     while True:
         time.sleep(1)
         print(test.get_temperatures())

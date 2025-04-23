@@ -1,9 +1,10 @@
 # pyrometer serial reading ieee754
-import struct
-import photrix
+# Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
 import time
 import datetime
 import atexit
+import struct
+import photrix
 import SS_fitting
 
 
@@ -16,16 +17,35 @@ def decode_ieee754(data: bytes):
 
 
 if __name__ == "__main__":
-    # Pyrometer is controlled by a mix of manual serial commands and MODBUS commands
+    import numpy as np
+    from scipy.interpolate import interp1d
+
+    RADIATIVE = False
 
     pyro = photrix.pyrometer("COM1")
     # Should implement buffered reading, but that's for later
 
-    data_file = open(f"data/{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w")
+    data_file = open(
+        f"data/{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.tsv", "w", encoding="ascii"
+    )
     atexit.register(data_file.close)
     data_file.write(
         "Time(s)\tPhotodiode_Current(A)\tFit_Temperature(C)\tSputter_Gun_Temperature(C)\n"
     )
+    if RADIATIVE:
+        radiative_data = np.loadtxt("radiative_calibration.tsv")
+        radiative_interpolator = interp1d(
+            radiative_data[:, 0],
+            radiative_data[:, 1],
+            bounds_error=False,
+            fill_value=-1,
+        )
+
+        def radiative_temperature_from_current(local_current):
+            if local_current < radiative_data[0, 0]:
+                print("Photodiode Current is too low to give accurate Temperature")
+            else:
+                return radiative_interpolator
 
     temperature_bytes = bytearray()
     current_bytes = bytearray()
@@ -76,19 +96,21 @@ if __name__ == "__main__":
             if current < 0:
                 current = 1.0e-17
             output_string += f"Current (A): {current:+e} "
+            if RADIATIVE:
+                fit_temperature = radiative_temperature_from_current(current)
             fit_temperature = SS_fitting.temperature_from_current(current)
             output_string += f"Fit Temperature (C): {fit_temperature:+e}"
 
-        if False:
-            if temperature_bytes != b"":
-                temperature = decode_ieee754(temperature_bytes)
-                output_string += f"Temperature (C): {temperature:+e} "
-            if electronics_temperature_bytes != b"":
-                output_string += f"Electronics Temp. (C): {decode_ieee754(electronics_temperature_bytes):+e} "
-            if diode_temperature_bytes != b"":
-                output_string += (
-                    f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
-                )
+        # if False:
+        #     if temperature_bytes != b"":
+        #         temperature = decode_ieee754(temperature_bytes)
+        #         output_string += f"Temperature (C): {temperature:+e} "
+        #     if electronics_temperature_bytes != b"":
+        #         output_string += f"Electronics Temp. (C): {decode_ieee754(electronics_temperature_bytes):+e} "
+        #     if diode_temperature_bytes != b"":
+        #         output_string += (
+        #             f"Diode Temp. (C): {decode_ieee754(diode_temperature_bytes):+e}"
+        #         )
 
         output_string += f" Sputter Gun Temperature (C): {sputter_temperature:+e}"
 
